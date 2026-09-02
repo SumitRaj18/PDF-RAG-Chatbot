@@ -14,7 +14,7 @@ const app = express();
 
 app.use(passport.initialize());  // ← also required, or authenticate() throws differently
 app.use(cors({
-  origin:'http://localhost:5173',
+  origin:'https://pdf-rag-chatbot-opal.vercel.app',
   credentials:true
 }));
 app.use(cookieParser())

@@ -1,1 +1,1 @@
-export const API_BASE = 'http://localhost:5000'
+export const API_BASE = 'https://pdf-rag-chatbot-0le9.onrender.com'
