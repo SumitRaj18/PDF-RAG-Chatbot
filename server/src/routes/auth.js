@@ -7,12 +7,14 @@ import requireAuth from "../middleware/auth.js";
 
 const router = Router();
 
-// Cookie configuration options
+const isProduction = process.env.NODE_ENV === "production";
+
+// Updated Cookie Configuration for Cross-Domain Production (Vercel <-> Render)
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "strict",
-  maxAge:  24 * 60 * 60 * 1000 // 7 days in milliseconds
+  secure: isProduction, // Required to be true when sameSite is "none"
+  sameSite: isProduction ? "none" : "lax", // Allows cross-site cookie transmission in production
+  maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
 };
 
 function issueToken(user) {
@@ -20,7 +22,6 @@ function issueToken(user) {
     expiresIn: process.env.JWT_EXPIRES_IN || "1d",
   });
 }
-
 
 router.post("/signup", async (req, res) => {
   const { email, password } = req.body;
@@ -34,21 +35,25 @@ router.post("/signup", async (req, res) => {
   try {
     const existing = await User.findOne({ email: email.toLowerCase() });
     if (existing) {
-      return res.status(409).json({ error: "An account with that email already exists." });
+      return res
+        .status(409)
+        .json({ error: "An account with that email already exists." });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const user = await User.create({ email: email.toLowerCase(), passwordHash });
-    
+    const user = await User.create({
+      email: email.toLowerCase(),
+      passwordHash,
+    });
+
     const token = issueToken(user);
 
-    // FIX: Set cookie during signup so user is automatically authenticated
     return res
       .status(201)
       .cookie("token", token, COOKIE_OPTIONS)
-      .json({ 
-        user: { id: user._id, email: user.email, token }, 
-        msg: "Account created successfully" 
+      .json({
+        user: { id: user._id, email: user.email, token },
+        msg: "Account created successfully",
       });
   } catch (err) {
     console.error("Signup error:", err);
@@ -75,13 +80,13 @@ router.post("/login", async (req, res) => {
     }
 
     const token = issueToken(user);
-    // FIX: Use status 200 for login, set cookie options, and omit sensitive hash
+
     return res
       .status(200)
       .cookie("token", token, COOKIE_OPTIONS)
-      .json({ 
-        user: { id: user._id, email: user.email }, 
-        msg: "Logged in successfully" 
+      .json({
+        user: { id: user._id, email: user.email },
+        msg: "Logged in successfully",
       });
   } catch (err) {
     console.error("Login error:", err);
@@ -89,21 +94,29 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Logout helper to clear HTTP-only cookie
 router.post("/logout", (req, res) => {
   return res
     .clearCookie("token", COOKIE_OPTIONS)
     .json({ msg: "Logged out successfully" });
 });
 
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+router.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
 
-router.get('/google/callback',
-  passport.authenticate('google', { session: false, failureRedirect: '/login' }),
+router.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    session: false,
+    failureRedirect: "/login",
+  }),
   (req, res) => {
     const token = issueToken(req.user);
-    res.cookie('token', token, COOKIE_OPTIONS);
-    res.redirect(`http://localhost:5173/oauth-success?token=${token}`);
+    res.cookie("token", token, COOKIE_OPTIONS);
+
+    const clientUrl = "https://pdf-rag-chatbot-opal.vercel.app";
+    res.redirect(`${clientUrl}/oauth-success?token=${token}`);
   }
 );
 
