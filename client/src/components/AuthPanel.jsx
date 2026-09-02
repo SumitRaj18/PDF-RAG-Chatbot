@@ -145,7 +145,7 @@ export default function AuthPanel() {
       </div>
 
       <a
-        href="http://localhost:5000/api/auth/google"
+        href="https://pdf-rag-chatbot-0le9.onrender.com/api/auth/google"
         className="flex items-center justify-center gap-2.5 text-sm text-[#22261F] bg-white border border-[#D2CDBC] rounded-[3px] py-2.5 no-underline cursor-pointer hover:bg-[#FBFAF6] hover:border-[#B8B29C]"
       >
         <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
