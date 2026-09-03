@@ -16,5 +16,11 @@ router.get("/", requireAuth, async (req, res) => {
     res.status(500).json({ error: "Failed to list documents." });
   }
 });
+router.delete('/:id', async (req,res) => {
+  const {id} = req.params;
+
+  const deleteDoc = await Document.findByIdAndDelete({_id:id,userId:req.userId})
+  return res.json({msg:'Deleted'})
+})
 
 export default router;
