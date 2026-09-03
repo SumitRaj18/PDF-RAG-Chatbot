@@ -20,7 +20,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deleteDoc = await Document.findOneAndDelete({ _id: id, userId: req.userId });
+    const deleteDoc = await Document.findOneAndDelete({ documentId: id, userId: req.userId });
 
     if (!deleteDoc) {
       return res.status(404).json({ error: "Document not found." });
