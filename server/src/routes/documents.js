@@ -16,11 +16,21 @@ router.get("/", requireAuth, async (req, res) => {
     res.status(500).json({ error: "Failed to list documents." });
   }
 });
-router.delete('/:id', async (req,res) => {
-  const {id} = req.params;
+router.delete('/:id', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
 
-  const deleteDoc = await Document.findByIdAndDelete({_id:id,userId:req.userId})
-  return res.json({msg:'Deleted'})
-})
+    const deleteDoc = await Document.findOneAndDelete({ _id: id, userId: req.userId });
+
+    if (!deleteDoc) {
+      return res.status(404).json({ error: "Document not found." });
+    }
+
+    return res.json({ msg: 'Deleted', documentId: deleteDoc._id });
+  } catch (err) {
+    console.error("Delete document error:", err);
+    res.status(500).json({ error: "Failed to delete document." });
+  }
+});
 
 export default router;
