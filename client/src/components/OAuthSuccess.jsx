@@ -16,7 +16,11 @@ export default function OAuthSuccess() {
     }
 
     fetch(`${API_BASE}/api/auth/me`,
-       { credentials: "include" })
+       {method:'GET',
+        headers:{
+          "Content-Type":'application/json'
+        } ,
+        credentials: "include" })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch user");
         return res.json();
