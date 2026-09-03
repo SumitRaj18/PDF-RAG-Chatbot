@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Routes, Route } from "react-router-dom";
 import AuthPanel from "./components/AuthPanel.jsx";
@@ -12,7 +12,8 @@ import "./App.css";
 export default function App() {
   const [doc, setDoc] = useState(null); // { documentId, fileName }
   const [refreshKey, setRefreshKey] = useState(0);
-  
+  const chatRef = useRef(null);
+
   const dispatch = useDispatch();
   const users = useSelector((state) => state.user.user);
   const currentUser = users[users.length - 1];
@@ -25,6 +26,14 @@ export default function App() {
   function handleIngested(newDoc) {
     setDoc(newDoc);
     setRefreshKey((k) => k + 1);
+
+    // On mobile, the chat panel sits below the fold after upload — scroll to it.
+    // On desktop the grid shows both panels side by side, so skip scrolling there.
+    if (window.matchMedia("(max-width: 760px)").matches) {
+      requestAnimationFrame(() => {
+        chatRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
   }
 
   return (
@@ -61,7 +70,7 @@ export default function App() {
                     />
                   </div>
                 </section>
-                <section className="app__panel app__panel--chat">
+                <section className="app__panel app__panel--chat" ref={chatRef}>
                   <ChatPanel
                     token={currentUser.token}
                     documentId={doc?.documentId}
